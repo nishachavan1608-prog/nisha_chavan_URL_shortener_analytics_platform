@@ -249,20 +249,21 @@ def redirect_url(short_code):
                 conn.close()
                 return render_template("expired.html")
             last_visit=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            ip_address = request.remote_addr
+            ip_address = request.headers.get("X-Forwarded-For", request.remote_addr)
+
+            if ip_address:
+                ip_address = ip_address.split(",")[0]
             print("IP:", ip_address)
             country = "Unknown"
             city = "Unknown"
             try:
                 response = requests.get(f"http://ip-api.com/json/{ip_address}")
              
-                data = response.json()
-                print(data)
-                if data["status"] == "success":
-                    country = data["country"]
-                    city = data["city"]
-                else:
-                    print("ApI Error:",data)
+                location_data = response.json()
+                print("Location Data:",location_data)
+                if located_data["status"] == "success":
+                    country = located_data["country"]
+                    city = located_data["city"]
             except Exception as e:
                 print("Exception:",e)
                 

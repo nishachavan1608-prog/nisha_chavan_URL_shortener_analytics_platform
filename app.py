@@ -261,9 +261,9 @@ def redirect_url(short_code):
              
                 location_data = response.json()
                 print("Location Data:",location_data)
-                if located_data["status"] == "success":
-                    country = located_data["country"]
-                    city = located_data["city"]
+                if location_data["status"] == "success":
+                    country = location_data["country"]
+                    city = location_data["city"]
             except Exception as e:
                 print("Exception:",e)
                 

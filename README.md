@@ -120,4 +120,4 @@ Name: Nisha Chavan
 
 Project: URL Shortener & Analytics Dashboard
 
-Built using Python Flask as a college project.
+Python Developer Internship Project.

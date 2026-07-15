@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>URL Details</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="home-card">
+      <div class="visit-summary">
+    <h3>📈 Total Visits: {{ url_data[2] }}</h3>
+</div>
+
+    <h1>URL Details</h1>
+
+    <p><b>Original URL:</b> {{ url_data[0] }}</p>
+
+    <p><b>Short Code:</b> {{ url_data[1] }}</p>
+
+    <p><b>Total Clicks:</b> {{ url_data[2] }}</p>
+
+    <p><b>Created At:</b> {{ url_data[3] }}</p>
+
+    <p><b>Last Visited:</b> {{ url_data[4] }}</p>
+
+    <p><b>Expiry Days:</b> {{ url_data[5] }}</p>
+    <h3>📊Visit Analytics</h3>
+    <div style="height: 250px;">
+        <canvas id="visitChart"></canvas>
+    </div>
+
+
+    <h2>Visit History</h2>
+
+    {% if visits %}
+    <ul>
+        <div class="history-list">
+{% for visit in visits %}
+    <li>
+    🕒 {{ visit[0] }}<br>
+
+    {% if visit[1] == "Windows" %}
+        💻 Windows
+    {% elif visit[1] == "Android" %}
+        📱 Android
+    {% elif visit[1] == "iPhone" %}
+        📱 iPhone
+    {% elif visit[1] == "Mac" %}
+        💻 Mac
+    {% else %}
+        ❓ Unknown
+    {% endif %}
+</li>
+    
+{% endfor %}
+</div>
+{% else %}
+    <p>No visits found.</p>
+{% endif %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById("visitChart");
+
+new Chart(ctx, {
+    type: "bar",
+    data: {
+        labels: {{ chart_labels|tojson }},
+        datasets: [{
+            label: "Visits",
+            data: {{ chart_values|tojson }},
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true
+    }
+});
+</script>
+</body>
+</html>

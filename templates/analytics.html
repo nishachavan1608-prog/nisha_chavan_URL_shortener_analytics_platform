@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Analytics Dashboard</title>
+
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<header class="navbar">
+
+    <div class="logo">
+        🔗 LinkShort
+    </div>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/analytics">Analytics</a>
+    </nav>
+
+    <button id="themeButton" onclick="toggleDarkMode()">
+        🌙 Dark Mode
+    </button>
+
+</header>
+
+<div class="dashboard">
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+
+        <div class="stat-card blue">
+            <h4>🔗Total URLs</h4>
+            <h2>{{ total_urls }}</h2>
+        </div>
+
+        <div class="stat-card green">
+            <h4>👆Total Clicks</h4>
+            <h2>{{ total_clicks }}</h2>
+        </div>
+
+        <div class="stat-card orange">
+            <h4>🟢Active URLs</h4>
+            <h2>{{ active_urls }}</h2>
+        </div>
+
+        <div class="stat-card red">
+            <h4>🔴Expired URLs</h4>
+            <h2>{{ expired_urls }}</h2>
+        </div>
+
+        <div class="stat-card purple">
+            <h4>📆Created Today</h4>
+            <h2>{{ today_urls }}</h2>
+        </div>
+
+        <div class="stat-card gold">
+            <h4>✴️Most Clicked</h4>
+
+            <p>{{ most_clicked_url }}</p>
+
+            <small>{{ max_clicks }} Clicks</small>
+        </div>
+
+    </div>
+
+    <!-- Analytics -->
+    <div class="analytics-grid">
+
+        <!-- Top URLs -->
+        <div class="card">
+
+            <h3>🏆 Top URLs</h3>
+
+            {% for row in top_urls %}
+
+            <div class="top-url">
+
+                <span>{{ loop.index }}. {{ row[1] }}</span>
+
+                <span class="badge">{{ row[2] }}</span>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <!-- Click Chart -->
+
+        <div class="card">
+
+            <h3>📈 Click Analytics</h3>
+
+            <div class="chart-box">
+
+                <canvas id="clickChart"></canvas>
+
+            </div>
+
+        </div>
+
+        <!-- Pie Chart -->
+
+        <div class="card">
+
+            <h3>📊 URL Status</h3>
+
+            <div class="pie-box">
+
+                <canvas id="statusChart"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Device Analytics --> 
+    <div class="card">
+
+        <h3>💻 Device Analytics</h3>
+
+        <div class="device-box">
+
+            <canvas id="deviceChart"></canvas>
+
+        </div>
+
+    </div>
+
+    <!-- Recent Visits -->
+
+    <div class="card">
+
+        <h3>🕒 Recent Visits</h3>
+
+        {% for visit in recent_visits %}
+
+        <div class="visit-item">
+
+            <span>{{ visit[0] }}</span>
+
+            <span>{{ visit[1] }}</span>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+
+<div class="card search-report-card">
+
+        <h3>🔍 Search & Reports</h3>
+
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Search URL, Short Code, Status..."
+            onkeyup="searchTable()">
+
+        <div class="download-buttons">
+
+            <a href="/export" onclick="showToast('CSV report download started')">
+                <button>📄 Download CSV</button>
+            </a>
+
+            <a href="/export_pdf" onclick="showToast('PDF report download started')">
+                <button>📕 Download PDF</button>
+            </a>
+
+        </div>
+
+        <div class="filter-buttons">
+
+            <button onclick="filterRows('all')">All URLs</button>
+
+            <button onclick="filterRows('Active')">Active URLs</button>
+
+            <button onclick="filterRows('Expired')">Expired URLs</button>
+
+        </div>
+
+    </div>
+        <div class="analytics-table">
+        <table>
+            <tr>
+                <th>Sr. No</th>
+                <th>Original URL</th>
+                <th>Short code</th>
+                <th>Device</th>
+                <th>Country</th>
+                <th>City</th>
+                <th>IP Address</th>
+                <th>Clicks</th>
+                <th>Created At</th>
+                <th>Last visited</th>
+                <th>Status</th>
+                <th>Days Left</th>
+                <th>Expiry days</th>
+                <th>Action</th>
+
+            </tr>
+            {% for row in data %}
+            <tr data-status="{{ row[7] }}">
+                <td>{{ loop.index }}</td>
+                <td>{{row[0]}}</td>
+                <td id="url{{ loop.index }}">{{ request.host_url }}{{ row[1] }}</td>
+                <td>
+                    {% if row[6] == "Windows" %}
+                        💻 Windows
+                    {% elif row[6] == "Android" %}
+                        📱 Android
+                    {% elif row[6] == "iPhone" %}
+                        📱 iPhone
+                    {% elif row[6] == "Mac" %}
+                    💻 Mac
+                    {% else %}
+                        ❓ Unknown
+                    {% endif %}
+                </td>
+                <td>{{row[9]}}</td>
+                <td>{{row[10]}}</td>
+                <td>{{row[11]}}</td>
+                <td>{{row[2]}}</td>
+                <td>{{row[3]}}</td>
+                <td>{{row[4]}}</td>
+                <td>
+                    {% if row[7]=="Expired" %}
+                     🔴 Expired
+                    {% else %}
+                    🟢 Active
+                    {% endif %}
+                
+                </td>
+                <td>
+                    {% if row[8]=="Expired" %}
+                    <span style="color:red;font-weight:bold;">Expired</span>
+                    {% elif row[8]=="Expires Today"%}
+                    <span  style="color:orange;font-weight: bold;">Expires Today</span>
+                    {% elif row[8] is number and row[8] <=2 %}
+                    <span style="color:orange ;font-weight;bold;">{{ row[8] }} Days</span>
+                    {% else %}
+                    <span style="color: green;font-weight: bold;">{{ row[8 ]}}</span>
+                    {% endif %}
+                </td>
+                 <td>{{row[5]}}</td>
+             
+                <td>
+                    <button onclick="copyURL('url{{ loop.index }}')">copy</button>
+                    <a href="/qr/{{row[1]}}" target="_blank" onclick="showToast('Opening QR code....')">
+                        <button>QR</button>
+                    </a>
+                 <a href="/download_qr/{{ row[1] }}" onclick="showToast('Qr code download started')">
+                       <button>Download QR</button>
+                   </a>
+                 <a href="/edit/{{ row[1] }}">
+                        <button>Edit</button>
+                    </a>
+                    <a  href="/details/{{ row[1] }}">
+                     <button>View Details</button>
+                    </a>
+                    <a href="/delete/{{ row[1] }}"
+                    onclick="return confirm('Are you sure you want to delete this URL?')">
+                    <button>Delete</button>
+                    </a>
+             </td>
+            </tr>
+            {% endfor %}
+            </table>
+        </div>
+        <script>
+            function copyURL(id){
+                let element=document.getElementById(id);
+                if(!element){
+                    showToast("URL not found!","error");
+                    return ;
+
+                }
+                let text=element.innerText.trim();
+                if(navigator.clipboard && window.isSecureContext){
+                    navigator.clipboard.writeText(text).then(function(){
+                     showToast("URL copied successfully!");
+
+                    }).catch(function(){
+                        fallbackCopy(text);
+                    });
+
+
+                    }
+                    else{
+                        fallbackCopy(text);
+                    }
+                }
+                function fallbackCopy(text){
+                    let textarea=document.createElement("textarea");
+                    textarea.value=text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(textarea);
+                    showToast("URL copied successfully!")
+                }
+        </script>
+        <script>
+            function searchTable()
+            {
+                let input=document.getElementById("searchInput");
+                let filter=input.value.toLowerCase();
+
+                let table=document.querySelector("table");
+                let rows=table.getElementsByTagName("tr");
+
+                for(let i=1;i<rows.length;i++)
+            {
+                let text=rows[i].innerText.toLocaleLowerCase();
+                if(text.includes(filter))
+            {
+                rows[i].style.display="";
+
+            }
+            else
+            {
+                rows[i].style.display="none";
+            }
+            }
+            }
+        </script>
+        <script >
+            console.log("Chart Test")
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const ctx=document.getElementById("clickChart");
+            new Chart(ctx,{
+                type:"bar",
+                data:{
+                     labels: {{ labels|tojson }} ,
+                      datasets:[{
+                        label:"Clicks",
+                        data:{{ click_values|tojson }}
+                        }]
+        
+                    },
+                    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        layout: {
+            padding: {
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 20
+            }
+        },
+
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+
+        scales: {
+            x: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            },
+
+            y: {
+                ticks: {
+                    autoSkip: false
+                }
+            }
+        }
+    }
+    });
+        </script>
+        <script>
+            function toggleDarkMode()
+            {document.body.classList.toggle("dark-mode");
+                let button=document.getElementById("themeButton");
+                if(document.body.classList.contains("dark-mode"))
+                {
+                    button.innerHTML="☀️Light Mode";
+                    localStorage.setItem("theme","dark");
+                    updateChartTheme();
+                }
+                else{
+                    button.innerHTML="🌙 Dark Mode";
+                    localStorage.setItem("theme","light");
+                    updateChartTheme();
+                }
+            }
+        window.onload = function(){
+
+        let savedTheme = localStorage.getItem("theme");
+
+        if(savedTheme=="dark"){
+            document.body.classList.add("dark-mode");
+            document.getElementById("themeButton").innerHTML=" Light Mode";
+        }
+
+        updateChartTheme();
+
+    }
+        </script>
+        <script>
+            function filterRows(status){
+                let rows=document.querySelectorAll("table tr[data-status]");
+                rows.forEach(function(row)
+            {
+                if(status=="all")
+            {
+                row.style.display="";
+
+            }
+            else{
+                if(row.dataset.status===status
+                
+                ){
+                    row.style.display="";
+
+                }
+                else{
+                    row.style.display="none";
+
+                }
+            }
+            });
+            }
+        </script>
+    <script>
+    const statusCtx = document.getElementById('statusChart');
+    new Chart(statusCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Active URLs', 'Expired URLs'],
+            datasets: [{
+                data: [{{ active_urls }}, {{ expired_urls }}],
+                backgroundColor: [
+                    '#22c55e',
+                    '#ef4444'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: 15
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }   
+    });
+    </script>
+    <script>
+        const deviceCtx = document.getElementById('deviceChart');
+
+    const deviceChart=new Chart(deviceCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ device_labels|tojson }},
+            datasets: [{
+                label: 'Visits',
+                data: {{ device_counts|tojson }}
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+    function updateChartTheme() {
+
+        const dark = document.body.classList.contains("dark-mode");
+
+        const textColor = dark ? "#ffffff" : "#333333";
+        const gridColor = dark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)";
+        const bgColor = dark ? "#1f2937" : "#ffffff";
+
+        // Change chart background
+        deviceChart.canvas.parentNode.style.background = bgColor;
+
+        // X Axis
+        deviceChart.options.scales.x.ticks.color = textColor;
+        deviceChart.options.scales.x.grid.color = gridColor;
+
+        // Y Axis
+        deviceChart.options.scales.y.ticks.color = textColor;
+        deviceChart.options.scales.y.grid.color = gridColor;
+
+        // Legend
+        deviceChart.options.plugins.legend.labels.color = textColor;
+
+        deviceChart.update();
+    }
+
+    </script>
+    <div id="toast" class="toast"></div>
+    <script>
+    function showToast(message,type="success"){
+
+        const toast=document.getElementById("toast");
+
+        toast.innerHTML=message;
+
+        toast.className="toast";
+
+        if(type==="error"){
+            toast.classList.add("error");
+        }
+
+        if(type==="warning"){
+            toast.classList.add("warning");
+        }
+
+        toast.classList.add("show");
+
+        setTimeout(()=>{
+            toast.classList.remove("show");
+        },3000);
+    }
+    </script>
+</div>
+
+</body>
+</html>

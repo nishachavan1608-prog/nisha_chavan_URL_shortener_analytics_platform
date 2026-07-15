@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Expired</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='style.css')}}">
+</head>
+<body>
+    <div class="expired-card">
+        <h2>URL Expired. </h2>
+        <h3>This short URL has expired and has been removed.</h3>
+        <h5>Create other new URL's</h5>
+        <a href="/">
+            <button>Create New URL</button>
+        </a>
+    </div>
+    <script>
+        if(localStorage.getItem("theme")=="dark"){
+            document.body.classList.add("dark-mode");
+        }
+    </script>
+</body>
+</html>

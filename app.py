@@ -249,17 +249,20 @@ def redirect_url(short_code):
                 conn.close()
                 return render_template("expired.html")
             last_visit=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            ip_address = request.headers.get("X-Forwarded-For", request.remote_addr)
+            ip_address = request.headers.get("X-Forwarded-For")
 
             if ip_address:
-                ip_address = ip_address.split(",")[0]
+                ip_address = ip_address.split(",")[0].strip()
+            else:
+              ip_address = request.remote_addr
             print("IP:", ip_address)
             country = "Unknown"
             city = "Unknown"
             try:
-                response = requests.get(f"http://ip-api.com/json/{ip_address}")
+                response = requests.get(f"https://ip-api.com/json/{ip_address}", timeout=5)
              
                 location_data = response.json()
+                print("FINAL LOCATION:",country,city)
                 print("Location Data:",location_data)
                 if location_data["status"] == "success":
                     country = location_data["country"]
@@ -310,7 +313,7 @@ def analytics():
 
     for row in data:
 
-        cursor.execute("""SELECT device, country, city, ip_address FROM click_history WHERE short_code=?ORDER BY id DESC LIMIT 1""", (row[1],))
+        cursor.execute("""SELECT device, country, city, ip_address FROM click_history WHERE short_code=? AND country!='Unknown'ORDER BY id DESC LIMIT 1""", (row[1],))
         visit = cursor.fetchone()
 
         if visit:

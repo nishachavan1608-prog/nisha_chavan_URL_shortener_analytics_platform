@@ -1,3 +1,6 @@
+from ipaddress import ip_address
+from urllib import response
+
 from flask import Flask, render_template, request, redirect, send_file, flash
 import random
 import string
@@ -259,16 +262,18 @@ def redirect_url(short_code):
             country = "Unknown"
             city = "Unknown"
             try:
-                response = requests.get(f"https://ip-api.com/json/{ip_address}", timeout=5)
-             
+                response = requests.get(f"http://ip-api.com/json/{ip_address}? fields=status,country,city",timeout=5
+    )
+
                 location_data = response.json()
-                print("FINAL LOCATION:",country,city)
-                print("Location Data:",location_data)
-                if location_data["status"] == "success":
-                    country = location_data["country"]
-                    city = location_data["city"]
+                print("Location Data:", location_data)
+
+                if location_data.get("status") == "success":
+                     country = location_data.get("country", "Unknown")
+                     city = location_data.get("city", "Unknown")
+
             except Exception as e:
-                print("Exception:",e)
+                print("Exception:", e)
                 
             user_agent = request.user_agent.string
             print("USER AGENT=", request.user_agent.string)

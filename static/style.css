@@ -5,6 +5,26 @@ body{
     width: 100%;
     min-height: 100vh;
 }
+.home-card{
+    width: 95%;
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,.12);
+}
+
+.dark-mode .home-card{
+    background: #1f2937;
+    color: white;
+    border: 1px solid #374151;
+}
+
+.dark-mode .history-list li{
+    background:#374151;
+    color:white;
+}
 
 h1{
     text-align: center;
